@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32px" height="32px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <title>AI Companies</title>
+    <defs>
+        <linearGradient x1="0%" y1="0%" x2="100%" y2="100%" id="gradient">
+            <stop stop-color="#6366F1" offset="0%"></stop>
+            <stop stop-color="#4F46E5" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect fill="#0F172A" x="0" y="0" width="32" height="32" rx="8"></rect>
+        <path d="M8,8 L8,24 L12,24 L12,8 L8,8 Z M20,8 L20,24 L24,24 L24,8 L20,8 Z M14,14 L14,24 L18,24 L18,14 L14,14 Z" fill="url(#gradient)"></path>
+    </g>
+</svg>
