@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 
+// Tag component
+const Tag = ({ active, type, children }) => (
+  <span className={`tag ${type}-tag ${active ? 'active' : ''}`}>
+    {children}
+  </span>
+);
+
 // Tag filter component
 const TagFilter = ({ label, active, onClick }) => (
   <button 
@@ -24,25 +31,63 @@ const CompanyCard = ({ company }) => {
         {company.name}
       </a>
       <div className="company-founded">Founded {company.founded}</div>
+      {company.headline && <div className="company-headline">{company.headline}</div>}
       <div className="company-niche">{company.niche}</div>
       <div className="company-differentiator">{company.key_differentiator}</div>
       <div className="tags">
-        {company.web3_native && (
-          <span className="tag web3-tag">Web3</span>
-        )}
-        {company.inference_apis && (
-          <span className="tag inference-tag">Inference APIs</span>
-        )}
-        {company.custom_model_hosting && (
-          <span className="tag hosting-tag">Custom Hosting</span>
-        )}
-        {company.fine_tuning_pipeline && (
-          <span className="tag fine-tuning-tag">Fine-tuning</span>
-        )}
-        {company.rent_gpu_compute && (
-          <span className="tag gpu-tag">GPU Compute</span>
-        )}
+        {company.web3_native && <Tag type="web3">Web3</Tag>}
+        {company.inference_apis && <Tag type="inference">Inference APIs</Tag>}
+        {company.custom_model_hosting && <Tag type="hosting">Custom Hosting</Tag>}
+        {company.fine_tuning_pipeline && <Tag type="fine-tuning">Fine-tuning</Tag>}
+        {company.rent_gpu_compute && <Tag type="gpu">GPU Compute</Tag>}
       </div>
+    </div>
+  );
+};
+
+// Table view component
+const CompanyTable = ({ companies, onSort, sortConfig }) => {
+  const getHeaderClass = (name) => {
+    if (!sortConfig) return '';
+    return sortConfig.key === name ? `sort-${sortConfig.direction}` : '';
+  };
+
+  return (
+    <div className="table-container">
+      <table className="companies-table">
+        <thead>
+          <tr>
+            <th onClick={() => onSort('name')} className={getHeaderClass('name')}>Company</th>
+            <th onClick={() => onSort('founded')} className={getHeaderClass('founded')}>Founded</th>
+            <th onClick={() => onSort('headline')} className={getHeaderClass('headline')}>Headline</th>
+            <th onClick={() => onSort('niche')} className={getHeaderClass('niche')}>Niche</th>
+            <th>Key Differentiator</th>
+            <th>Capabilities</th>
+          </tr>
+        </thead>
+        <tbody>
+          {companies.map(company => (
+            <tr key={company.id}>
+              <td>
+                <a href={company.website} target="_blank" rel="noopener noreferrer" className="company-name">
+                  {company.name}
+                </a>
+              </td>
+              <td>{company.founded}</td>
+              <td>{company.headline}</td>
+              <td>{company.niche}</td>
+              <td>{company.key_differentiator}</td>
+              <td className="tags-cell">
+                {company.web3_native && <Tag type="web3">Web3</Tag>}
+                {company.inference_apis && <Tag type="inference">Inference APIs</Tag>}
+                {company.custom_model_hosting && <Tag type="hosting">Custom Hosting</Tag>}
+                {company.fine_tuning_pipeline && <Tag type="fine-tuning">Fine-tuning</Tag>}
+                {company.rent_gpu_compute && <Tag type="gpu">GPU Compute</Tag>}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
@@ -51,6 +96,8 @@ function App() {
   const [companies, setCompanies] = useState([]);
   const [filteredCompanies, setFilteredCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState('table'); // 'table' or 'cards'
+  const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
   const [filters, setFilters] = useState({
     web3_native: false,
     inference_apis: false,
@@ -65,7 +112,7 @@ function App() {
 
   useEffect(() => {
     applyFilters();
-  }, [companies, filters]);
+  }, [companies, filters, sortConfig]);
 
   const fetchCompanies = async () => {
     try {
@@ -85,22 +132,28 @@ function App() {
   };
 
   const applyFilters = () => {
-    // Check if any filters are active
+    let filtered = [...companies];
+
+    // Apply filters
     const anyFilterActive = Object.values(filters).some(value => value);
-    
-    if (!anyFilterActive) {
-      setFilteredCompanies(companies);
-      return;
+    if (anyFilterActive) {
+      filtered = filtered.filter(company => {
+        return Object.entries(filters).every(([key, value]) => {
+          if (!value) return true;
+          return company[key] === true;
+        });
+      });
     }
 
-    // Filter companies based on active filters
-    const filtered = companies.filter(company => {
-      return Object.entries(filters).every(([key, value]) => {
-        // If the filter is not active, don't filter by this property
-        if (!value) return true;
-        // If the filter is active, the company must have this property as true
-        return company[key] === true;
-      });
+    // Apply sorting
+    filtered.sort((a, b) => {
+      if (a[sortConfig.key] < b[sortConfig.key]) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (a[sortConfig.key] > b[sortConfig.key]) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
     });
 
     setFilteredCompanies(filtered);
@@ -113,10 +166,31 @@ function App() {
     }));
   };
 
+  const handleSort = (key) => {
+    setSortConfig(current => ({
+      key,
+      direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc',
+    }));
+  };
+
   return (
     <div className="container">
       <header>
         <h1>AI Companies Dashboard</h1>
+        <div className="view-toggle">
+          <button 
+            className={`view-button ${viewMode === 'table' ? 'active' : ''}`}
+            onClick={() => setViewMode('table')}
+          >
+            Table View
+          </button>
+          <button 
+            className={`view-button ${viewMode === 'cards' ? 'active' : ''}`}
+            onClick={() => setViewMode('cards')}
+          >
+            Card View
+          </button>
+        </div>
       </header>
 
       <div className="filter-container">
@@ -154,11 +228,19 @@ function App() {
           <div className="loading-spinner"></div>
         </div>
       ) : filteredCompanies.length > 0 ? (
-        <div className="companies-grid">
-          {filteredCompanies.map(company => (
-            <CompanyCard key={company.id} company={company} />
-          ))}
-        </div>
+        viewMode === 'table' ? (
+          <CompanyTable 
+            companies={filteredCompanies} 
+            onSort={handleSort}
+            sortConfig={sortConfig}
+          />
+        ) : (
+          <div className="companies-grid">
+            {filteredCompanies.map(company => (
+              <CompanyCard key={company.id} company={company} />
+            ))}
+          </div>
+        )
       ) : (
         <div className="empty-state">
           <p>No companies match your filters</p>
