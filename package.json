@@ -1,16 +1,19 @@
 {
-  "name": "ai-companies-dashboard",
+  "name": "foundation",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "update-headlines": "node scripts/update-headlines.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
+    "dotenv": "^16.4.7",
+    "puppeteer": "^24.4.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
