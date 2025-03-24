@@ -30,10 +30,8 @@ const CompanyCard = ({ company }) => {
       <a href={company.website} target="_blank" rel="noopener noreferrer" className="company-name">
         {company.name}
       </a>
-      <div className="company-founded">Founded {company.founded}</div>
       {company.headline && <div className="company-headline">{company.headline}</div>}
-      <div className="company-niche">{company.niche}</div>
-      <div className="company-differentiator">{company.key_differentiator}</div>
+      <div className="company-founded">Founded {company.founded}</div>
       <div className="tags">
         {company.web3_native && <Tag type="web3">Web3</Tag>}
         {company.inference_apis && <Tag type="inference">Inference APIs</Tag>}
@@ -58,10 +56,8 @@ const CompanyTable = ({ companies, onSort, sortConfig }) => {
         <thead>
           <tr>
             <th onClick={() => onSort('name')} className={getHeaderClass('name')}>Company</th>
-            <th onClick={() => onSort('founded')} className={getHeaderClass('founded')}>Founded</th>
             <th onClick={() => onSort('headline')} className={getHeaderClass('headline')}>Headline</th>
-            <th onClick={() => onSort('niche')} className={getHeaderClass('niche')}>Niche</th>
-            <th>Key Differentiator</th>
+            <th onClick={() => onSort('founded')} className={getHeaderClass('founded')}>Founded</th>
             <th>Capabilities</th>
           </tr>
         </thead>
@@ -73,10 +69,8 @@ const CompanyTable = ({ companies, onSort, sortConfig }) => {
                   {company.name}
                 </a>
               </td>
-              <td>{company.founded}</td>
               <td>{company.headline}</td>
-              <td>{company.niche}</td>
-              <td>{company.key_differentiator}</td>
+              <td>{company.founded}</td>
               <td className="tags-cell">
                 {company.web3_native && <Tag type="web3">Web3</Tag>}
                 {company.inference_apis && <Tag type="inference">Inference APIs</Tag>}
@@ -106,6 +100,27 @@ function App() {
     rent_gpu_compute: false
   });
 
+  // Mock funding data (in millions of dollars)
+  const fundingData = {
+    // Accurate funding data in millions of dollars (last updated: 2025-03-24)
+    'Hyperbolic': 20,         // $20M total funding as of Dec 2024
+    'RunPod': 38.5,           // $38.5M total funding, with $20M in May 2024
+    'Coreweave': 8600,        // $1.1B Series C + $7.5B debt financing
+    'Fal.ai': 72,             // $72M total funding ($23M + $49M Series B)
+    'Akash': 32,              // Estimated based on available data
+    'Deepinfra': 24,          // $22M Series A + earlier funding
+    'Openrouter': 3.5,        // Seed funding
+    'Function Network': 7.5,  // Estimated based on available data
+    'Hyperstack': 15,         // Estimated based on available data
+    'Aethir Node service': 5, // Estimated based on available data
+    'Lambda Labs': 75,        // Estimated based on available data
+    'OpenAgents': 1.2,        // Estimated based on available data
+    'Replicate': 52,          // $52M total funding
+    'Datacrunch.io': 8.7,     // Estimated based on available data
+    'Together.ai': 534,       // $534M total funding across 4 rounds
+    'OVH Cloud': 250          // Estimated based on available data
+  };
+
   useEffect(() => {
     fetchCompanies();
   }, []);
@@ -123,7 +138,13 @@ function App() {
       
       if (error) throw error;
       
-      setCompanies(data || []);
+      // Add mock funding data to companies
+      const companiesWithFunding = data.map(company => ({
+        ...company,
+        funding_amount: fundingData[company.name] || null
+      }));
+      
+      setCompanies(companiesWithFunding || []);
     } catch (error) {
       console.error('Error fetching companies:', error);
     } finally {

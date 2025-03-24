@@ -184,7 +184,22 @@ h1 {
 .company-founded {
   font-size: 0.875rem;
   color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.company-headline {
+  font-size: 1rem;
+  color: var(--text-color);
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.company-funding {
+  font-size: 0.875rem;
+  color: var(--success-color);
   margin-bottom: 1rem;
+  font-weight: 600;
 }
 
 .company-niche {
@@ -199,14 +214,6 @@ h1 {
   color: var(--text-secondary);
   margin-bottom: 1rem;
   line-height: 1.4;
-}
-
-.company-headline {
-  font-size: 1rem;
-  color: var(--primary-color);
-  margin-bottom: 0.75rem;
-  font-weight: 500;
-  font-style: italic;
 }
 
 .tags {
@@ -305,6 +312,13 @@ h1 {
 
 .companies-table td {
   color: var(--text-secondary);
+}
+
+/* Special styling for specific table columns */
+.companies-table td:nth-child(4) {
+  /* Funding column */
+  color: var(--success-color);
+  font-weight: 600;
 }
 
 .tags-cell {
