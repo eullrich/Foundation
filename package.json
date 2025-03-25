@@ -8,14 +8,20 @@
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "update-headlines": "node scripts/update-headlines.js"
+    "update-headlines": "node scripts/update-headlines.js",
+    "update-headlines-function": "node scripts/update-headlines-function.js",
+    "fix-headlines": "node scripts/fix-headlines.js",
+    "add-funding": "node scripts/add-funding-column.js",
+    "update-funding": "node scripts/update-funding-data.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
     "dotenv": "^16.4.7",
+    "node-fetch": "^3.3.2",
     "puppeteer": "^24.4.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",

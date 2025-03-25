@@ -2,6 +2,7 @@
 import { createClient } from '@supabase/supabase-js';
 import puppeteer from 'puppeteer';
 import dotenv from 'dotenv';
+import fetch from 'node-fetch';
 
 // Load environment variables
 dotenv.config();
@@ -11,8 +12,11 @@ const supabaseUrl = process.env.VITE_SUPABASE_URL;
 const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Function to extract hero text from a website
-async function extractHeroText(url) {
+// Perplexity API key
+const PERPLEXITY_API_KEY = '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';
+
+// Function to extract website content
+async function extractWebsiteContent(url) {
   console.log(`Visiting ${url}...`);
   
   try {
@@ -31,10 +35,12 @@ async function extractHeroText(url) {
     });
     
     // Wait a bit for any dynamic content to load
-    await page.waitForTimeout(2000);
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Try different selectors that might contain hero text
-    const heroText = await page.evaluate(() => {
+    // Extract potential taglines directly
+    const taglines = await page.evaluate(() => {
+      const results = [];
+      
       // Common hero text selectors
       const selectors = [
         // Headers in hero sections
@@ -53,36 +59,87 @@ async function extractHeroText(url) {
       for (const selector of selectors) {
         const elements = document.querySelectorAll(selector);
         if (elements.length > 0) {
-          // Get the first visible element with non-empty text
+          // Get visible elements with non-empty text
           for (const el of elements) {
             if (el.offsetParent !== null) { // Check if visible
               const text = el.textContent.trim();
               if (text && text.length > 5 && text.length < 200) {
-                return text;
+                results.push(text);
               }
             }
           }
         }
       }
       
-      // Fallback: get the first heading with reasonable length
-      const headings = document.querySelectorAll('h1, h2, h3');
-      for (const heading of headings) {
-        if (heading.offsetParent !== null) { // Check if visible
-          const text = heading.textContent.trim();
-          if (text && text.length > 5 && text.length < 200) {
-            return text;
-          }
-        }
-      }
+      // Get page title as well
+      results.push(document.title);
       
-      return null;
+      return results;
     });
     
     await browser.close();
-    return heroText;
+    return taglines;
   } catch (error) {
-    console.error(`Error extracting hero text from ${url}:`, error.message);
+    console.error(`Error extracting content from ${url}:`, error.message);
+    return null;
+  }
+}
+
+// Function to select the best tagline using Perplexity API
+async function selectBestTagline(companyName, taglines) {
+  if (!taglines || taglines.length === 0) return null;
+  
+  try {
+    // Format the taglines for the prompt
+    const taglineList = taglines.map((t, i) => `${i+1}. "${t}"`).join('\n');
+    
+    const prompt = `
+I need to select the best tagline for ${companyName} from the following options extracted from their website:
+
+${taglineList}
+
+Which ONE of these is most likely to be the company's main tagline or hero headline? 
+A good tagline should be concise, memorable, and communicate the company's value proposition.
+Return ONLY the text of the best tagline, nothing else. Do not include numbering or quotes.
+`;
+
+    const response = await fetch('https://api.perplexity.ai/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${PERPLEXITY_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'sonar',
+        messages: [
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 100
+      })
+    });
+
+    const data = await response.json();
+    
+    if (data.error) {
+      console.error('Perplexity API error:', data.error);
+      return null;
+    }
+    
+    // Extract just the tagline from the response
+    const content = data.choices[0].message.content.trim();
+    
+    // Clean up the response by removing any explanations or citations
+    let tagline = content;
+    if (content.includes('[')) {
+      tagline = content.split('[')[0].trim();
+    }
+    if (content.includes('\n')) {
+      tagline = content.split('\n')[0].trim();
+    }
+    
+    return tagline;
+  } catch (error) {
+    console.error('Error calling Perplexity API:', error.message);
     return null;
   }
 }
@@ -113,26 +170,38 @@ async function updateCompanyHeadlines() {
         continue;
       }
       
-      // Extract hero text
-      const heroText = await extractHeroText(company.website);
+      // Extract potential taglines
+      const taglines = await extractWebsiteContent(company.website);
       
-      if (heroText) {
-        console.log(`Found hero text for ${company.name}: "${heroText}"`);
+      if (taglines && taglines.length > 0) {
+        console.log(`Found ${taglines.length} potential taglines for ${company.name}`);
         
-        // Update the company headline
-        const { error: updateError } = await supabase
-          .from('ai_companies')
-          .update({ headline: heroText })
-          .eq('id', company.id);
+        // Use Perplexity API to select the best tagline
+        const bestTagline = await selectBestTagline(company.name, taglines);
         
-        if (updateError) {
-          console.error(`Error updating headline for ${company.name}:`, updateError.message);
+        if (bestTagline) {
+          console.log(`Selected tagline for ${company.name}: "${bestTagline}"`);
+          
+          // Update the company headline
+          const { error: updateError } = await supabase
+            .from('ai_companies')
+            .update({ headline: bestTagline })
+            .eq('id', company.id);
+          
+          if (updateError) {
+            console.error(`Error updating headline for ${company.name}:`, updateError.message);
+          } else {
+            console.log(`Updated headline for ${company.name}`);
+          }
         } else {
-          console.log(`Updated headline for ${company.name}`);
+          console.log(`No suitable tagline found for ${company.name}`);
         }
       } else {
-        console.log(`No hero text found for ${company.name}`);
+        console.log(`Failed to extract taglines from ${company.name}'s website`);
       }
+      
+      // Add a delay to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
     
     console.log('Finished updating headlines');

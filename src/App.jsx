@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
+import AddCompanyForm from './components/AddCompanyForm';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { UserProfile } from './components/UserProfile';
 
 // Tag component
-const Tag = ({ active, type, children }) => (
+export const Tag = ({ active, type, children }) => (
   <span className={`tag ${type}-tag ${active ? 'active' : ''}`}>
     {children}
   </span>
@@ -23,29 +26,7 @@ const TagFilter = ({ label, active, onClick }) => (
   </button>
 );
 
-// Company card component
-const CompanyCard = ({ company }) => {
-  return (
-    <div className="company-card">
-      <a href={company.website} target="_blank" rel="noopener noreferrer" className="company-name">
-        {company.name}
-      </a>
-      <div className="company-founded">Founded {company.founded}</div>
-      {company.headline && <div className="company-headline">{company.headline}</div>}
-      <div className="company-niche">{company.niche}</div>
-      <div className="company-differentiator">{company.key_differentiator}</div>
-      <div className="tags">
-        {company.web3_native && <Tag type="web3">Web3</Tag>}
-        {company.inference_apis && <Tag type="inference">Inference APIs</Tag>}
-        {company.custom_model_hosting && <Tag type="hosting">Custom Hosting</Tag>}
-        {company.fine_tuning_pipeline && <Tag type="fine-tuning">Fine-tuning</Tag>}
-        {company.rent_gpu_compute && <Tag type="gpu">GPU Compute</Tag>}
-      </div>
-    </div>
-  );
-};
-
-// Table view component
+// Company table component
 const CompanyTable = ({ companies, onSort, sortConfig }) => {
   const getHeaderClass = (name) => {
     if (!sortConfig) return '';
@@ -58,11 +39,8 @@ const CompanyTable = ({ companies, onSort, sortConfig }) => {
         <thead>
           <tr>
             <th onClick={() => onSort('name')} className={getHeaderClass('name')}>Company</th>
-            <th onClick={() => onSort('founded')} className={getHeaderClass('founded')}>Founded</th>
             <th onClick={() => onSort('headline')} className={getHeaderClass('headline')}>Headline</th>
-            <th onClick={() => onSort('niche')} className={getHeaderClass('niche')}>Niche</th>
-            <th>Key Differentiator</th>
-            <th>Capabilities</th>
+            <th>Products</th>
           </tr>
         </thead>
         <tbody>
@@ -73,11 +51,8 @@ const CompanyTable = ({ companies, onSort, sortConfig }) => {
                   {company.name}
                 </a>
               </td>
-              <td>{company.founded}</td>
               <td>{company.headline}</td>
-              <td>{company.niche}</td>
-              <td>{company.key_differentiator}</td>
-              <td className="tags-cell">
+              <td>
                 {company.web3_native && <Tag type="web3">Web3</Tag>}
                 {company.inference_apis && <Tag type="inference">Inference APIs</Tag>}
                 {company.custom_model_hosting && <Tag type="hosting">Custom Hosting</Tag>}
@@ -96,8 +71,7 @@ function App() {
   const [companies, setCompanies] = useState([]);
   const [filteredCompanies, setFilteredCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState('table'); // 'table' or 'cards'
-  const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
+  const [showAddForm, setShowAddForm] = useState(false);
   const [filters, setFilters] = useState({
     web3_native: false,
     inference_apis: false,
@@ -105,6 +79,29 @@ function App() {
     fine_tuning_pipeline: false,
     rent_gpu_compute: false
   });
+  const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
+  const { isAdmin } = useAuth();
+
+  // Mock funding data (in millions of dollars)
+  const fundingData = {
+    // Accurate funding data in millions of dollars (last updated: 2025-03-24)
+    'Hyperbolic': 20,         // $20M total funding as of Dec 2024
+    'RunPod': 38.5,           // $38.5M total funding, with $20M in May 2024
+    'Coreweave': 8600,        // $1.1B Series C + $7.5B debt financing
+    'Fal.ai': 72,             // $72M total funding ($23M + $49M Series B)
+    'Akash': 32,              // Estimated based on available data
+    'Deepinfra': 24,          // $22M Series A + earlier funding
+    'Openrouter': 3.5,        // Seed funding
+    'Function Network': 7.5,  // Estimated based on available data
+    'Hyperstack': 15,         // Estimated based on available data
+    'Aethir Node service': 5, // Estimated based on available data
+    'Lambda Labs': 75,        // Estimated based on available data
+    'OpenAgents': 1.2,        // Estimated based on available data
+    'Replicate': 52,          // $52M total funding
+    'Datacrunch.io': 8.7,     // Estimated based on available data
+    'Together.ai': 534,       // $534M total funding across 4 rounds
+    'OVH Cloud': 250          // Estimated based on available data
+  };
 
   useEffect(() => {
     fetchCompanies();
@@ -123,7 +120,13 @@ function App() {
       
       if (error) throw error;
       
-      setCompanies(data || []);
+      // Add mock funding data to companies
+      const companiesWithFunding = data.map(company => ({
+        ...company,
+        funding_amount: fundingData[company.name] || null
+      }));
+      
+      setCompanies(companiesWithFunding || []);
     } catch (error) {
       console.error('Error fetching companies:', error);
     } finally {
@@ -173,27 +176,35 @@ function App() {
     }));
   };
 
+  const handleCompanyAdded = (newCompany) => {
+    // Add the new company to the list
+    setCompanies(prev => [...prev, newCompany]);
+    // Hide the form
+    setShowAddForm(false);
+  };
+
   return (
     <div className="container">
       <header>
-        <h1>AI Companies Dashboard</h1>
-        <div className="view-toggle">
-          <button 
-            className={`view-button ${viewMode === 'table' ? 'active' : ''}`}
-            onClick={() => setViewMode('table')}
-          >
-            Table View
-          </button>
-          <button 
-            className={`view-button ${viewMode === 'cards' ? 'active' : ''}`}
-            onClick={() => setViewMode('cards')}
-          >
-            Card View
-          </button>
+        <h1>AI Infra Companies</h1>
+        <div className="header-actions">
+          <div className="action-buttons">
+            <UserProfile />
+          </div>
         </div>
       </header>
 
+      {showAddForm && (
+        <div className="modal-backdrop">
+          <AddCompanyForm 
+            onCompanyAdded={handleCompanyAdded} 
+            onCancel={() => setShowAddForm(false)} 
+          />
+        </div>
+      )}
+
       <div className="filter-container">
+        <div className="filter-label">Filter by products:</div>
         <div className="tag-filter">
           <TagFilter 
             label="Web3 Native" 
@@ -223,24 +234,29 @@ function App() {
         </div>
       </div>
 
+      {/* Floating Add Company Button - Only visible for admin users */}
+      {isAdmin && (
+        <button 
+          className="floating-add-button"
+          onClick={() => setShowAddForm(true)}
+          aria-label="Add Company"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+      )}
       {loading ? (
         <div className="loading">
           <div className="loading-spinner"></div>
         </div>
       ) : filteredCompanies.length > 0 ? (
-        viewMode === 'table' ? (
-          <CompanyTable 
-            companies={filteredCompanies} 
-            onSort={handleSort}
-            sortConfig={sortConfig}
-          />
-        ) : (
-          <div className="companies-grid">
-            {filteredCompanies.map(company => (
-              <CompanyCard key={company.id} company={company} />
-            ))}
-          </div>
-        )
+        <CompanyTable 
+          companies={filteredCompanies} 
+          onSort={handleSort}
+          sortConfig={sortConfig}
+        />
       ) : (
         <div className="empty-state">
           <p>No companies match your filters</p>
@@ -250,4 +266,10 @@ function App() {
   );
 }
 
-export default App;
+export default function AppWrapper() {
+  return (
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  );
+}
