@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
+import { useAuth } from '../contexts/AuthContext';
 
 const AddCompanyForm = ({ onCompanyAdded, onCancel }) => {
+  const { user, isAdmin } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     headline: '',
@@ -32,6 +34,15 @@ const AddCompanyForm = ({ onCompanyAdded, onCancel }) => {
     setError(null);
     
     try {
+      // Check if user is authenticated and has admin privileges
+      if (!user) {
+        throw new Error('You must be logged in to add a company');
+      }
+      
+      if (!isAdmin) {
+        throw new Error('Only administrators can add companies');
+      }
+      
       // Validate form data
       if (!formData.name.trim()) {
         throw new Error('Company name is required');
@@ -49,7 +60,8 @@ const AddCompanyForm = ({ onCompanyAdded, onCancel }) => {
       // Generate UUID for the id field
       const companyWithId = {
         ...formData,
-        id: uuidv4()
+        id: uuidv4(),
+        created_by: user.id
       };
       
       // Insert data into Supabase
@@ -74,6 +86,27 @@ const AddCompanyForm = ({ onCompanyAdded, onCancel }) => {
       setIsSubmitting(false);
     }
   };
+
+  // If user is not an admin, show access denied message
+  if (!isAdmin) {
+    return (
+      <div className="add-company-form-container">
+        <h2>Access Denied</h2>
+        <div className="error-message">
+          Only administrators can add new companies.
+        </div>
+        <div className="form-actions">
+          <button 
+            type="button" 
+            className="cancel-button" 
+            onClick={onCancel}
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="add-company-form-container">

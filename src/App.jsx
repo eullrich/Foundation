@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import AddCompanyForm from './components/AddCompanyForm';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { UserProfile } from './components/UserProfile';
 
 // Tag component
 export const Tag = ({ active, type, children }) => (
@@ -101,6 +103,7 @@ function App() {
     fine_tuning_pipeline: false,
     rent_gpu_compute: false
   });
+  const { isAdmin } = useAuth();
 
   // Mock funding data (in millions of dollars)
   const fundingData = {
@@ -207,31 +210,24 @@ function App() {
     <div className="container">
       <header>
         <h1>AI Companies Dashboard</h1>
-        <div className="view-controls">
+        <div className="header-actions">
           <div className="view-toggle">
             <button 
-              className={`view-button ${viewMode === 'table' ? 'active' : ''}`}
+              className={`toggle-button ${viewMode === 'table' ? 'active' : ''}`}
               onClick={() => setViewMode('table')}
             >
               Table View
             </button>
             <button 
-              className={`view-button ${viewMode === 'cards' ? 'active' : ''}`}
+              className={`toggle-button ${viewMode === 'cards' ? 'active' : ''}`}
               onClick={() => setViewMode('cards')}
             >
               Card View
             </button>
           </div>
-          <button 
-            className="add-company-button"
-            onClick={() => setShowAddForm(true)}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            Add Company
-          </button>
+          <div className="action-buttons">
+            <UserProfile />
+          </div>
         </div>
       </header>
 
@@ -274,6 +270,19 @@ function App() {
         </div>
       </div>
 
+      {/* Floating Add Company Button - Only visible for admin users */}
+      {isAdmin && (
+        <button 
+          className="floating-add-button"
+          onClick={() => setShowAddForm(true)}
+          aria-label="Add Company"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+      )}
       {loading ? (
         <div className="loading">
           <div className="loading-spinner"></div>
@@ -301,4 +310,10 @@ function App() {
   );
 }
 
-export default App;
+export default function AppWrapper() {
+  return (
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  );
+}
