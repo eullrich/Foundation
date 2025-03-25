@@ -26,27 +26,7 @@ const TagFilter = ({ label, active, onClick }) => (
   </button>
 );
 
-// Company card component
-const CompanyCard = ({ company }) => {
-  return (
-    <div className="company-card">
-      <a href={company.website} target="_blank" rel="noopener noreferrer" className="company-name">
-        {company.name}
-      </a>
-      {company.headline && <div className="company-headline">{company.headline}</div>}
-      <div className="company-founded">Founded {company.founded}</div>
-      <div className="tags">
-        {company.web3_native && <Tag type="web3">Web3</Tag>}
-        {company.inference_apis && <Tag type="inference">Inference APIs</Tag>}
-        {company.custom_model_hosting && <Tag type="hosting">Custom Hosting</Tag>}
-        {company.fine_tuning_pipeline && <Tag type="fine-tuning">Fine-tuning</Tag>}
-        {company.rent_gpu_compute && <Tag type="gpu">GPU Compute</Tag>}
-      </div>
-    </div>
-  );
-};
-
-// Table view component
+// Company table component
 const CompanyTable = ({ companies, onSort, sortConfig }) => {
   const getHeaderClass = (name) => {
     if (!sortConfig) return '';
@@ -60,7 +40,6 @@ const CompanyTable = ({ companies, onSort, sortConfig }) => {
           <tr>
             <th onClick={() => onSort('name')} className={getHeaderClass('name')}>Company</th>
             <th onClick={() => onSort('headline')} className={getHeaderClass('headline')}>Headline</th>
-            <th onClick={() => onSort('founded')} className={getHeaderClass('founded')}>Founded</th>
             <th>Capabilities</th>
           </tr>
         </thead>
@@ -73,7 +52,6 @@ const CompanyTable = ({ companies, onSort, sortConfig }) => {
                 </a>
               </td>
               <td>{company.headline}</td>
-              <td>{company.founded}</td>
               <td>
                 {company.web3_native && <Tag type="web3">Web3</Tag>}
                 {company.inference_apis && <Tag type="inference">Inference APIs</Tag>}
@@ -93,8 +71,6 @@ function App() {
   const [companies, setCompanies] = useState([]);
   const [filteredCompanies, setFilteredCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState('table'); // 'table' or 'cards'
-  const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
   const [showAddForm, setShowAddForm] = useState(false);
   const [filters, setFilters] = useState({
     web3_native: false,
@@ -103,6 +79,7 @@ function App() {
     fine_tuning_pipeline: false,
     rent_gpu_compute: false
   });
+  const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
   const { isAdmin } = useAuth();
 
   // Mock funding data (in millions of dollars)
@@ -209,22 +186,8 @@ function App() {
   return (
     <div className="container">
       <header>
-        <h1>AI Companies Dashboard</h1>
+        <h1>AI Infra Companies</h1>
         <div className="header-actions">
-          <div className="view-toggle">
-            <button 
-              className={`toggle-button ${viewMode === 'table' ? 'active' : ''}`}
-              onClick={() => setViewMode('table')}
-            >
-              Table View
-            </button>
-            <button 
-              className={`toggle-button ${viewMode === 'cards' ? 'active' : ''}`}
-              onClick={() => setViewMode('cards')}
-            >
-              Card View
-            </button>
-          </div>
           <div className="action-buttons">
             <UserProfile />
           </div>
@@ -288,19 +251,11 @@ function App() {
           <div className="loading-spinner"></div>
         </div>
       ) : filteredCompanies.length > 0 ? (
-        viewMode === 'table' ? (
-          <CompanyTable 
-            companies={filteredCompanies} 
-            onSort={handleSort}
-            sortConfig={sortConfig}
-          />
-        ) : (
-          <div className="companies-grid">
-            {filteredCompanies.map(company => (
-              <CompanyCard key={company.id} company={company} />
-            ))}
-          </div>
-        )
+        <CompanyTable 
+          companies={filteredCompanies} 
+          onSort={handleSort}
+          sortConfig={sortConfig}
+        />
       ) : (
         <div className="empty-state">
           <p>No companies match your filters</p>
