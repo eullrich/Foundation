@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
+import AddCompanyForm from './components/AddCompanyForm';
 
 // Tag component
-const Tag = ({ active, type, children }) => (
+export const Tag = ({ active, type, children }) => (
   <span className={`tag ${type}-tag ${active ? 'active' : ''}`}>
     {children}
   </span>
@@ -92,6 +93,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('table'); // 'table' or 'cards'
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
+  const [showAddForm, setShowAddForm] = useState(false);
   const [filters, setFilters] = useState({
     web3_native: false,
     inference_apis: false,
@@ -194,25 +196,53 @@ function App() {
     }));
   };
 
+  const handleCompanyAdded = (newCompany) => {
+    // Add the new company to the list
+    setCompanies(prev => [...prev, newCompany]);
+    // Hide the form
+    setShowAddForm(false);
+  };
+
   return (
     <div className="container">
       <header>
         <h1>AI Companies Dashboard</h1>
-        <div className="view-toggle">
+        <div className="view-controls">
+          <div className="view-toggle">
+            <button 
+              className={`view-button ${viewMode === 'table' ? 'active' : ''}`}
+              onClick={() => setViewMode('table')}
+            >
+              Table View
+            </button>
+            <button 
+              className={`view-button ${viewMode === 'cards' ? 'active' : ''}`}
+              onClick={() => setViewMode('cards')}
+            >
+              Card View
+            </button>
+          </div>
           <button 
-            className={`view-button ${viewMode === 'table' ? 'active' : ''}`}
-            onClick={() => setViewMode('table')}
+            className="add-company-button"
+            onClick={() => setShowAddForm(true)}
           >
-            Table View
-          </button>
-          <button 
-            className={`view-button ${viewMode === 'cards' ? 'active' : ''}`}
-            onClick={() => setViewMode('cards')}
-          >
-            Card View
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Add Company
           </button>
         </div>
       </header>
+
+      {showAddForm && (
+        <div className="modal-backdrop">
+          <AddCompanyForm 
+            onCompanyAdded={handleCompanyAdded} 
+            onCancel={() => setShowAddForm(false)} 
+          />
+        </div>
+      )}
 
       <div className="filter-container">
         <div className="tag-filter">
