@@ -71,7 +71,7 @@ const CompanyTable = ({ companies, onSort, sortConfig }) => {
               </td>
               <td>{company.headline}</td>
               <td>{company.founded}</td>
-              <td className="tags-cell">
+              <td>
                 {company.web3_native && <Tag type="web3">Web3</Tag>}
                 {company.inference_apis && <Tag type="inference">Inference APIs</Tag>}
                 {company.custom_model_hosting && <Tag type="hosting">Custom Hosting</Tag>}

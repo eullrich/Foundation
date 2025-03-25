@@ -224,10 +224,19 @@ h1 {
 }
 
 .tag {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.75rem;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.6rem;
   border-radius: 1rem;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.5rem;
+  line-height: 1;
+}
+
+.tags-cell .tag {
+  margin: 0.1rem;
 }
 
 .web3-tag {
@@ -306,12 +315,17 @@ h1 {
   color: var(--primary-color);
 }
 
+.companies-table tr {
+  height: 60px; /* Set a fixed height for all rows */
+}
+
 .companies-table tr:hover {
   background: rgba(255, 255, 255, 0.03);
 }
 
 .companies-table td {
   color: var(--text-secondary);
+  vertical-align: middle;
 }
 
 /* Special styling for specific table columns */
@@ -324,8 +338,11 @@ h1 {
 .tags-cell {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
+  gap: 0.rem;
   min-width: 200px;
+  align-items: center;
+  height: 100%;
+  padding: 0.rem 0;
 }
 
 .loading {
