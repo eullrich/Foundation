@@ -40,7 +40,7 @@ const CompanyTable = ({ companies, onSort, sortConfig }) => {
           <tr>
             <th onClick={() => onSort('name')} className={getHeaderClass('name')}>Company</th>
             <th onClick={() => onSort('headline')} className={getHeaderClass('headline')}>Headline</th>
-            <th>Capabilities</th>
+            <th>Products</th>
           </tr>
         </thead>
         <tbody>
@@ -204,6 +204,7 @@ function App() {
       )}
 
       <div className="filter-container">
+        <div className="filter-label">Filter by products:</div>
         <div className="tag-filter">
           <TagFilter 
             label="Web3 Native" 
