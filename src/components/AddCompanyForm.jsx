@@ -165,7 +165,7 @@ const AddCompanyForm = ({ onCompanyAdded, onCancel }) => {
         </div>
         
         <div className="form-group capabilities-group">
-          <label>Capabilities</label>
+          <label>Products</label>
           
           <div className="checkbox-group">
             <input

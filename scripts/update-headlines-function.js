@@ -12,8 +12,8 @@ const supabaseUrl = process.env.VITE_SUPABASE_URL;
 const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Function Network API key
-const FUNCTION_API_KEY = 'w5YTBzZIwq01w4koUTzDh0rCoA8Z';
+// Function Network API key from environment variable
+const FUNCTION_API_KEY = process.env.FUNCTION_API_KEY;
 
 // Function to extract website content
 async function extractWebsiteContent(url) {
@@ -90,6 +90,12 @@ async function extractTaglineWithFunctionNetwork(companyName, websiteContent) {
   
   try {
     console.log(`Extracting tagline for ${companyName} using Function Network API...`);
+    
+    // Check if API key is available
+    if (!FUNCTION_API_KEY) {
+      console.error('Function Network API key not found in environment variables');
+      return null;
+    }
     
     const prompt = `
 I need to extract the main tagline or hero headline from this company's website content.
