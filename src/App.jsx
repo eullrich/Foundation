@@ -2,25 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import AddCompanyForm from './components/AddCompanyForm';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import Sidebar from './components/Sidebar';
 import { UserProfile } from './components/UserProfile';
 
 // Tag component
 export const Tag = ({ active, type, children }) => (
-  <span className={`tag ${type}-tag ${active ? 'active' : ''}`}>
+  <span className={`tag ${active ? 'active' : ''} ${type}`}>
     {children}
   </span>
 );
 
-// Tag filter component
+// TagFilter component for filtering
 const TagFilter = ({ label, active, onClick }) => (
   <button 
-    className={`tag-button ${active ? 'active' : ''}`}
+    className={`tag-filter-button ${active ? 'active' : ''}`}
     onClick={onClick}
   >
     {label}
     {active && (
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="20 6 9 17 4 12"></polyline>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="check-icon">
+        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
       </svg>
     )}
   </button>
@@ -30,12 +31,12 @@ const TagFilter = ({ label, active, onClick }) => (
 const CompanyTable = ({ companies, onSort, sortConfig }) => {
   const getHeaderClass = (name) => {
     if (!sortConfig) return '';
-    return sortConfig.key === name ? `sort-${sortConfig.direction}` : '';
+    return sortConfig.key === name ? sortConfig.direction : '';
   };
 
   return (
-    <div className="table-container">
-      <table className="companies-table">
+    <div className="company-table-container">
+      <table className="company-table">
         <thead>
           <tr>
             <th onClick={() => onSort('name')} className={getHeaderClass('name')}>Company</th>
@@ -44,7 +45,7 @@ const CompanyTable = ({ companies, onSort, sortConfig }) => {
           </tr>
         </thead>
         <tbody>
-          {companies.map(company => (
+          {companies.map((company) => (
             <tr key={company.id}>
               <td>
                 <a href={company.website} target="_blank" rel="noopener noreferrer" className="company-name">
@@ -56,7 +57,7 @@ const CompanyTable = ({ companies, onSort, sortConfig }) => {
                 {company.web3_native && <Tag type="web3">Web3</Tag>}
                 {company.inference_apis && <Tag type="inference">Inference APIs</Tag>}
                 {company.custom_model_hosting && <Tag type="hosting">Custom Hosting</Tag>}
-                {company.fine_tuning_pipeline && <Tag type="fine-tuning">Fine-tuning</Tag>}
+                {company.fine_tuning_pipeline && <Tag type="tuning">Fine-tuning</Tag>}
                 {company.rent_gpu_compute && <Tag type="gpu">GPU Compute</Tag>}
               </td>
             </tr>
@@ -81,10 +82,10 @@ function App() {
   });
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
   const { isAdmin } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Mock funding data (in millions of dollars)
   const fundingData = {
-    // Accurate funding data in millions of dollars (last updated: 2025-03-24)
     'Hyperbolic': 20,         // $20M total funding as of Dec 2024
     'RunPod': 38.5,           // $38.5M total funding, with $20M in May 2024
     'Coreweave': 8600,        // $1.1B Series C + $7.5B debt financing
@@ -183,86 +184,84 @@ function App() {
     setShowAddForm(false);
   };
 
+  const handleSidebarToggle = (isOpen) => {
+    setSidebarOpen(isOpen);
+  };
+
   return (
-    <div className="container">
-      <header>
-        <h1>AI Infra Companies</h1>
-        <div className="header-actions">
-          <div className="action-buttons">
-            <UserProfile />
+    <>
+      <Sidebar 
+        onAddCompany={() => setShowAddForm(true)}
+        onToggle={handleSidebarToggle}
+      />
+      
+      <div className={`container ${sidebarOpen ? '' : 'sidebar-closed'}`}>
+        <header>
+          <h1>AI Infra Companies</h1>
+          <div className="header-actions">
+            <div className="action-buttons">
+              <UserProfile />
+            </div>
+          </div>
+        </header>
+
+        {showAddForm && (
+          <div className="modal-backdrop">
+            <AddCompanyForm 
+              onCompanyAdded={handleCompanyAdded} 
+              onCancel={() => setShowAddForm(false)} 
+            />
+          </div>
+        )}
+
+        <div className="filter-container">
+          <div className="filter-label">Filter by products:</div>
+          <div className="tag-filter">
+            <TagFilter 
+              label="Web3 Native" 
+              active={filters.web3_native} 
+              onClick={() => toggleFilter('web3_native')} 
+            />
+            <TagFilter 
+              label="Inference APIs" 
+              active={filters.inference_apis} 
+              onClick={() => toggleFilter('inference_apis')} 
+            />
+            <TagFilter 
+              label="Custom Model Hosting" 
+              active={filters.custom_model_hosting} 
+              onClick={() => toggleFilter('custom_model_hosting')} 
+            />
+            <TagFilter 
+              label="Fine-tuning Pipeline" 
+              active={filters.fine_tuning_pipeline} 
+              onClick={() => toggleFilter('fine_tuning_pipeline')} 
+            />
+            <TagFilter 
+              label="GPU Compute" 
+              active={filters.rent_gpu_compute} 
+              onClick={() => toggleFilter('rent_gpu_compute')} 
+            />
           </div>
         </div>
-      </header>
 
-      {showAddForm && (
-        <div className="modal-backdrop">
-          <AddCompanyForm 
-            onCompanyAdded={handleCompanyAdded} 
-            onCancel={() => setShowAddForm(false)} 
+        {loading ? (
+          <div className="loading">
+            <div className="loading-spinner"></div>
+          </div>
+        ) : filteredCompanies.length > 0 ? (
+          <CompanyTable 
+            companies={filteredCompanies} 
+            onSort={handleSort}
+            sortConfig={sortConfig}
           />
-        </div>
-      )}
-
-      <div className="filter-container">
-        <div className="filter-label">Filter by products:</div>
-        <div className="tag-filter">
-          <TagFilter 
-            label="Web3 Native" 
-            active={filters.web3_native} 
-            onClick={() => toggleFilter('web3_native')} 
-          />
-          <TagFilter 
-            label="Inference APIs" 
-            active={filters.inference_apis} 
-            onClick={() => toggleFilter('inference_apis')} 
-          />
-          <TagFilter 
-            label="Custom Model Hosting" 
-            active={filters.custom_model_hosting} 
-            onClick={() => toggleFilter('custom_model_hosting')} 
-          />
-          <TagFilter 
-            label="Fine-tuning Pipeline" 
-            active={filters.fine_tuning_pipeline} 
-            onClick={() => toggleFilter('fine_tuning_pipeline')} 
-          />
-          <TagFilter 
-            label="GPU Compute" 
-            active={filters.rent_gpu_compute} 
-            onClick={() => toggleFilter('rent_gpu_compute')} 
-          />
-        </div>
+        ) : (
+          <div className="empty-state">
+            <p>No companies match your filters</p>
+          </div>
+        )}
       </div>
-
-      {/* Floating Add Company Button - Only visible for admin users */}
-      {isAdmin && (
-        <button 
-          className="floating-add-button"
-          onClick={() => setShowAddForm(true)}
-          aria-label="Add Company"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-        </button>
-      )}
-      {loading ? (
-        <div className="loading">
-          <div className="loading-spinner"></div>
-        </div>
-      ) : filteredCompanies.length > 0 ? (
-        <CompanyTable 
-          companies={filteredCompanies} 
-          onSort={handleSort}
-          sortConfig={sortConfig}
-        />
-      ) : (
-        <div className="empty-state">
-          <p>No companies match your filters</p>
-        </div>
-      )}
-    </div>
+    </>
   );
 }
 
