@@ -82,7 +82,7 @@ function App() {
   });
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
   const { isAdmin } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Function to toggle sidebar
   const toggleSidebar = () => {

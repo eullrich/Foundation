@@ -35,10 +35,14 @@ async function extractWebsiteContent(url) {
     });
     
     // Wait a bit for any dynamic content to load
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    const delay = (ms) => new Promise(resolve => {
+      const timeoutId = setTimeout(resolve, ms);
+      return () => clearTimeout(timeoutId);
+    });
+    await delay(2000);
     
     // Extract the visible text content from the page
-    const content = await page.evaluate(() => {
+    const content = await page.$$eval('*', elements => {
       // Get all text from the hero or header section if possible
       const heroSelectors = [
         'header', '.hero', '#hero', '[class*="hero"]',
@@ -49,24 +53,24 @@ async function extractWebsiteContent(url) {
       
       let heroText = '';
       for (const selector of heroSelectors) {
-        const heroElement = document.querySelector(selector);
+        const heroElement = elements.find(el => el.matches(selector));
         if (heroElement) {
-          heroText += heroElement.innerText + '\n';
+          heroText += heroElement.textContent + '\n';
         }
       }
       
       // If no hero section found, get the first few paragraphs
       if (!heroText) {
-        const mainContent = document.querySelector('main') || document.body;
+        const mainContent = elements.find(el => el.matches('main')) || elements.find(el => el.matches('body'));
         const headings = mainContent.querySelectorAll('h1, h2, h3');
         const paragraphs = mainContent.querySelectorAll('p');
         
         for (let i = 0; i < Math.min(headings.length, 3); i++) {
-          heroText += headings[i].innerText + '\n';
+          heroText += headings[i].textContent + '\n';
         }
         
         for (let i = 0; i < Math.min(paragraphs.length, 3); i++) {
-          heroText += paragraphs[i].innerText + '\n';
+          heroText += paragraphs[i].textContent + '\n';
         }
       }
       
@@ -207,7 +211,11 @@ async function updateCompanyHeadlines() {
       }
       
       // Add a delay to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const delay = (ms) => new Promise(resolve => {
+        const timeoutId = setTimeout(resolve, ms);
+        return () => clearTimeout(timeoutId);
+      });
+      await delay(2000);
     }
     
     console.log('Finished updating headlines');
