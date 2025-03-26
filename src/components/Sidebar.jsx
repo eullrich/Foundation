@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
@@ -22,6 +22,18 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     allMenuItems.find(item => item.default)?.name || allMenuItems[0]?.name
   );
   
+  useEffect(() => {
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape') {
+        toggleSidebar();
+      }
+    };
+    document.addEventListener('keydown', handleEscapeKey);
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, [toggleSidebar]);
+
   return (
     <>
       {/* Overlay for mobile */}

@@ -82,12 +82,27 @@ function App() {
   });
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
   const { isAdmin } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Function to toggle sidebar
   const toggleSidebar = () => {
     setSidebarOpen(prev => !prev);
   };
+
+  // Close sidebar when clicking outside on mobile
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (window.innerWidth < 768 && 
+          sidebarOpen && 
+          !event.target.closest('.sidebar') && 
+          !event.target.closest('.hamburger-menu')) {
+        setSidebarOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [sidebarOpen]);
 
   // Mock funding data (in millions of dollars)
   const fundingData = {
@@ -194,7 +209,7 @@ function App() {
     <>
       <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
       
-      <div className={`container main-content ${sidebarOpen ? '' : 'full-width'}`}>
+      <div className={`container main-content ${!sidebarOpen ? 'full-width' : ''}`}>
         <header>
           <div className="header-left">
             <button className="hamburger-menu" onClick={toggleSidebar} aria-label="Toggle menu">

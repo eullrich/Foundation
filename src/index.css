@@ -55,16 +55,16 @@ header {
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background-color: #1e293b;
-  border-bottom: 1px solid #334155;
+  background-color: var(--background-color);
+  border-bottom: 1px solid var(--border-color);
   margin-bottom: 2rem;
-  color: white;
+  color: var(--text-color);
 }
 
 header h1 {
   margin: 0;
   font-size: 1.5rem;
-  color: white;
+  color: var(--text-color);
 }
 
 .header-left {
@@ -890,7 +890,7 @@ header h1 {
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: white;
+  color: var(--text-color);
   display: flex;
   align-items: center;
   padding: 0.5rem;
@@ -989,20 +989,21 @@ header h1 {
 .sidebar {
   position: fixed;
   top: 0;
-  left: -280px;
+  left: 0;
   height: 100vh;
   width: 280px;
-  background-color: #1e293b;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
-  transition: left 0.3s ease;
+  background-color: var(--background-color);
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s ease;
   z-index: 999;
   display: flex;
   flex-direction: column;
-  color: white;
+  color: var(--text-color);
+  transform: translateX(-100%);
 }
 
 .sidebar.open {
-  left: 0;
+  transform: translateX(0);
 }
 
 .sidebar-header {
@@ -1010,13 +1011,13 @@ header h1 {
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  border-bottom: 1px solid #334155;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .sidebar-header h3 {
   margin: 0;
   font-size: 1.2rem;
-  color: white;
+  color: var(--text-color);
 }
 
 .sidebar-close {
@@ -1024,7 +1025,7 @@ header h1 {
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .sidebar-nav {
@@ -1047,18 +1048,18 @@ header h1 {
   display: flex;
   align-items: center;
   padding: 0.75rem 1rem;
-  color: #e2e8f0;
+  color: var(--text-color);
   text-decoration: none;
   transition: background-color 0.2s;
 }
 
 .sidebar-nav li a:hover {
-  background-color: #334155;
+  background-color: var(--primary-color);
 }
 
 .sidebar-nav li.active a {
-  background-color: #3b82f6;
-  color: white;
+  background-color: var(--primary-color);
+  color: var(--text-color);
   font-weight: 500;
 }
 
@@ -1074,15 +1075,15 @@ header h1 {
 .admin-badge {
   margin-left: auto;
   font-size: 0.7rem;
-  background-color: #f9a8d4;
-  color: #9d174d;
+  background-color: var(--primary-color);
+  color: var(--text-color);
   padding: 0.2rem 0.4rem;
   border-radius: 0.25rem;
 }
 
 .sidebar-footer {
   padding: 1rem;
-  border-top: 1px solid #334155;
+  border-top: 1px solid var(--border-color);
 }
 
 .user-info {
@@ -1094,8 +1095,8 @@ header h1 {
 .user-avatar {
   width: 2.5rem;
   height: 2.5rem;
-  background-color: #4f46e5;
-  color: white;
+  background-color: var(--primary-color);
+  color: var(--text-color);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1119,26 +1120,27 @@ header h1 {
 .user-email {
   font-size: 0.9rem;
   font-weight: 500;
+  color: var(--text-color);
 }
 
 .user-role {
   font-size: 0.8rem;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .sidebar-logout {
   width: 100%;
   padding: 0.5rem;
-  background-color: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
   border-radius: 0.25rem;
-  color: #334155;
+  color: var(--text-color);
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
 .sidebar-logout:hover {
-  background-color: #e2e8f0;
+  background-color: var(--primary-color);
 }
 
 .hamburger-menu {
@@ -1146,7 +1148,7 @@ header h1 {
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: white;
+  color: var(--text-color);
   display: flex;
   align-items: center;
   padding: 0.5rem;
@@ -1163,11 +1165,13 @@ header h1 {
   }
   
   .sidebar {
-    left: 0;
+    transform: none;
+    left: -280px;
   }
   
-  .sidebar.closed {
-    left: -280px;
+  .sidebar.open {
+    transform: none;
+    left: 0;
   }
   
   .main-content {
